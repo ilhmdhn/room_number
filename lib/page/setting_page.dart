@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:room_number/api/api_request.dart';
+import 'package:room_number/data/model/preferences_model.dart';
+import 'package:room_number/data/shared_pref/preferences_data.dart';
+import 'package:room_number/page/main_page.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -9,6 +13,26 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
+  bool isSetting = false;
+  TextEditingController textUrlController = TextEditingController();
+  TextEditingController textPortController = TextEditingController();
+  TextEditingController textRoomController = TextEditingController();
+  PreferencesModel? preferencesData;
+  @override
+  void initState() {
+    super.initState();
+    getPreferences();
+  }
+
+  void getPreferences() async {
+    preferencesData = await PreferencesData().getPreferences();
+    textUrlController.text = preferencesData?.url ?? 'IP Server belum diisi';
+    textPortController.text =
+        preferencesData?.port ?? 'Port Server belum diisi';
+    textRoomController.text =
+        preferencesData?.roomCode ?? 'Kode Room belum diisi';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,50 +42,88 @@ class _SettingPageState extends State<SettingPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
+            const Text(
               'PENGATURAN',
               style: TextStyle(fontSize: 20),
             ),
-            SizedBox(
+            const SizedBox(
               height: 5,
             ),
             TextField(
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
+              controller: textUrlController,
+              decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.all(4),
                 hintText: 'IP Address Server',
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 10,
             ),
             TextField(
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
+              controller: textPortController,
+              decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.all(4),
-                hintText: 'IP Address Port',
+                hintText: 'Server Port',
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 10,
             ),
             TextField(
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
+              controller: textRoomController,
+              decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.all(4),
                 hintText: 'Kode Room',
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 10,
             ),
-            ElevatedButton(onPressed: () {}, child: Text('SUBMIT'))
+            ElevatedButton(
+                onPressed: () async {
+                  PreferencesModel preferencesModel = PreferencesModel(
+                      isSetting: true,
+                      url: textUrlController.text,
+                      port: textPortController.text,
+                      roomCode: textRoomController.text);
+
+                  await PreferencesData().initPreferences(preferencesModel);
+                  final submit = await ApiService().registerRoomNumber();
+                  if (submit.isLoading == false) {
+                    if (submit.state == true) {
+                      if (mounted) {
+                        Navigator.of(context).pushNamedAndRemoveUntil(
+                            MainPage.nameRoute, (route) => false);
+                      }
+                    } else {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(submit.message.toString())));
+                      }
+                    }
+                  } else {
+                    const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                },
+                child: const Text('SUBMIT'))
           ],
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    textUrlController.dispose();
+    textPortController.dispose();
+    textRoomController.dispose();
   }
 }
