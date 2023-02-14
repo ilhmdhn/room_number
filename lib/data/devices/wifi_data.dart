@@ -1,14 +1,9 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 
-class CheckConnectivity {
+class CheckConnection {
+  final info = NetworkInfo();
+
   Future<String> checkIP() async {
-    final connectivityResult = await (Connectivity().checkConnectivity());
-
-    if (connectivityResult == ConnectivityResult.mobile) {
-      // I am connected to a mobile network.
-    } else if (connectivityResult == ConnectivityResult.wifi) {
-      final wifiInfo = ConnectivityResult.wifi;
-      wifiInfo.toString();
-    }
+    return await info.getWifiIP()??'127.0.0.1';
   }
 }
