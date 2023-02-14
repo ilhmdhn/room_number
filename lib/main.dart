@@ -13,14 +13,12 @@ void main() async {
   final wifiIP = await CheckConnection().checkIP();
   final socket = await RawDatagramSocket.bind(wifiIP, 7082);
 
-  print('hahhh IP ' + wifiIP);
-
   ApiService().registerRoomNumber();
 
   socket.listen((RawSocketEvent event) async {
     if (event == RawSocketEvent.read) {
-      final Datagram? dg = socket.receive();
-      print('hahhh sinyal masuk');
+      print('ALURNYA UDP MASUK');
+      Datagram? dg = socket.receive();
       final roomDetail = await ApiService().getRoomDetail();
       eventBusRoom.fire(RoomDetailEvent(roomDetail));
     }
