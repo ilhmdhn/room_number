@@ -6,6 +6,7 @@ import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -91,14 +92,13 @@ class _MainPageState extends State<MainPage> {
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
                                     const SizedBox(
-                                      height: 65,
+                                      height: 95,
                                     ),
                                     SizedBox(
                                       height: 40,
                                       child: DefaultTextStyle(
-                                        style: const TextStyle(
-                                          fontSize: 30.0,
-                                        ),
+                                        style:
+                                            GoogleFonts.roboto(fontSize: 43.0),
                                         child: AnimatedTextKit(
                                           repeatForever: true,
                                           animatedTexts: [
@@ -110,12 +110,11 @@ class _MainPageState extends State<MainPage> {
                                       ),
                                     ),
                                     SizedBox(
-                                      height: 40,
+                                      height: 45,
                                       child: DefaultTextStyle(
-                                        style: const TextStyle(
-                                          fontFamily: 'Bobbers',
-                                          fontSize: 30.0,
-                                        ),
+                                        style: GoogleFonts.dancingScript(
+                                            fontSize: 43,
+                                            fontWeight: FontWeight.bold),
                                         child: AnimatedTextKit(
                                           repeatForever: true,
                                           animatedTexts: [
@@ -158,21 +157,21 @@ class _MainPageState extends State<MainPage> {
                                     SizedBox(
                                       height: 40,
                                       child: DefaultTextStyle(
-                                        style: const TextStyle(
-                                          fontSize: 20.0,
-                                        ),
+                                        style: GoogleFonts.robotoSlab(
+                                            fontSize: 30,
+                                            fontWeight: FontWeight.bold),
                                         child: AnimatedTextKit(
                                           repeatForever: true,
                                           animatedTexts: [
                                             FadeAnimatedText(
-                                                '${roomDetailResult?.roomDetail?.roomCapacity} PAX | REDUCED ${((roomDetailResult?.roomDetail?.roomCapacity ?? 0) / 2).round()}'),
+                                                '${roomDetailResult?.roomDetail?.roomCapacity} PAX | REDUCED: ${((roomDetailResult?.roomDetail?.roomCapacity ?? 0) / 2).round()} PAX'),
                                           ],
                                           isRepeatingAnimation: true,
                                         ),
                                       ),
                                     ),
                                     const SizedBox(
-                                      height: 20,
+                                      height: 125,
                                     )
                                   ],
                                 ),
