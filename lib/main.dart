@@ -7,6 +7,7 @@ import './page/main_page.dart';
 import 'package:flutter/services.dart';
 import 'api/api_request.dart';
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -17,7 +18,6 @@ void main() async {
 
   socket.listen((RawSocketEvent event) async {
     if (event == RawSocketEvent.read) {
-      print('ALURNYA UDP MASUK');
       Datagram? dg = socket.receive();
       final roomDetail = await ApiService().getRoomDetail();
       eventBusRoom.fire(RoomDetailEvent(roomDetail));

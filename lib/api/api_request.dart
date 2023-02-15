@@ -11,7 +11,8 @@ class ApiService {
 
       final url = '${preferences.url}:${preferences.port}';
 
-      Uri apiUrl = Uri.parse('http://$url/room/room-detail-room-sign-new?room_code=${preferences.roomCode}');
+      Uri apiUrl = Uri.parse(
+          'http://$url/room/room-detail-room-sign-new?room_code=${preferences.roomCode}');
       final apiResponse = await http.get(apiUrl);
       return RoomDetailResult.fromJson(json.decode(apiResponse.body));
     } catch (e) {
@@ -25,8 +26,24 @@ class ApiService {
       final preferences = await PreferencesData().getPreferences();
 
       final url = '${preferences.url}:${preferences.port}';
-      Uri apiUrl = Uri.parse('http://$url/room/room-detail-room-sign/${preferences.roomCode}');
+      Uri apiUrl = Uri.parse(
+          'http://$url/room/room-detail-room-sign/${preferences.roomCode}');
       final apiResponse = await http.get(apiUrl);
+      return StateResult.fromJson(json.decode(apiResponse.body));
+    } catch (e) {
+      return StateResult(isLoading: false, state: false, message: e.toString());
+    }
+  }
+
+  Future<StateResult> responseCallRoom() async {
+    try {
+      final preferences = await PreferencesData().getPreferences();
+
+      final url = '${preferences.url}:${preferences.port}';
+      final bodyRequest = {'state': '0', 'chusr': 'room sign'};
+      Uri apiUrl =
+          Uri.parse('http://$url/call/callroom/${preferences.roomCode}');
+      final apiResponse = await http.put(apiUrl, body: bodyRequest);
       return StateResult.fromJson(json.decode(apiResponse.body));
     } catch (e) {
       return StateResult(isLoading: false, state: false, message: e.toString());
