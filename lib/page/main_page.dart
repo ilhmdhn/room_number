@@ -106,12 +106,12 @@ class _MainPageState extends State<MainPage>
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
                                     const SizedBox(
-                                      height: 80,
+                                      height: 75,
                                     ),
                                     SizedBox(
-                                      height: 40,
+                                      height: 45,
                                       child: DefaultTextStyle(
-                                        style: GoogleFonts.roboto(
+                                        style: GoogleFonts.robotoSlab(
                                             shadows: <Shadow>[
                                               const Shadow(
                                                 offset: Offset(2.0, 2.0),
@@ -155,6 +155,31 @@ class _MainPageState extends State<MainPage>
                                                     .toString(),
                                                 speed: const Duration(
                                                     milliseconds: 800)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: 20,
+                                    ),
+                                    SizedBox(
+                                      height: 45,
+                                      child: DefaultTextStyle(
+                                        style: GoogleFonts.robotoSlab(
+                                            shadows: <Shadow>[
+                                              const Shadow(
+                                                offset: Offset(2.0, 2.0),
+                                                blurRadius: 3.0,
+                                                color: Colors.black,
+                                              ),
+                                            ],
+                                            fontSize: 30),
+                                        child: AnimatedTextKit(
+                                          repeatForever: true,
+                                          animatedTexts: [
+                                            FadeAnimatedText(roomDetailResult!
+                                                .roomDetail!.checkinInfo
+                                                .toString()),
                                           ],
                                         ),
                                       ),

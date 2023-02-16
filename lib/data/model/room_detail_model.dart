@@ -16,11 +16,10 @@ class RoomDetailResult {
       throw json['message'];
     }
     return RoomDetailResult(
-      isLoading: false,
-      state: json['state'],
-      message: json['message'],
-      roomDetail: RoomDetail.fromJson(json['data'])
-    );
+        isLoading: false,
+        state: json['state'],
+        message: json['message'],
+        roomDetail: RoomDetail.fromJson(json['data']));
   }
 }
 
@@ -31,6 +30,7 @@ class RoomDetail {
   int? roomService;
   String? roomAlias;
   int? checkinState;
+  String? checkinInfo;
 
   RoomDetail({
     this.roomCode,
@@ -39,9 +39,10 @@ class RoomDetail {
     this.roomService,
     this.roomAlias,
     this.checkinState,
+    this.checkinInfo,
   });
 
-  factory RoomDetail.fromJson(Map<String, dynamic>json){
+  factory RoomDetail.fromJson(Map<String, dynamic> json) {
     return RoomDetail(
       roomCode: json['room_code'],
       roomCapacity: json['room_capacity'],
@@ -49,6 +50,7 @@ class RoomDetail {
       roomService: json['room_service'],
       roomAlias: json['room_alias'],
       checkinState: json['checkin_state'],
+      checkinInfo: json['checkin_info'],
     );
   }
 }
