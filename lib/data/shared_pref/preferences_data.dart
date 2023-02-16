@@ -14,10 +14,10 @@ class PreferencesData {
   Future<PreferencesModel> getPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     return PreferencesModel(
-        isSetting: prefs.getBool('IS_SETTING') ?? true,
-        url: prefs.getString('BASE_URL') ?? '192.168.1.148',
-        port: prefs.getString('PORT') ?? '3000',
-        roomCode: prefs.getString('ROOM_CODE') ?? 'PR A');
+        isSetting: prefs.getBool('IS_SETTING') ?? false,
+        url: prefs.getString('BASE_URL'),
+        port: prefs.getString('PORT'),
+        roomCode: prefs.getString('ROOM_CODE'));
   }
 
   Future<bool> isSetting() async {

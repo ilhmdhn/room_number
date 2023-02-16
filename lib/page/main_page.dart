@@ -16,18 +16,21 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
+class _MainPageState extends State<MainPage>
+    with SingleTickerProviderStateMixin {
   late VideoPlayerController _videoController;
   bool? isSetting;
   RoomDetailResult? roomDetailResult;
   int? checkinState = 0;
-  double blitzOn = 0;
+  late AnimationController _blinkController;
 
   @override
   void initState() {
     super.initState();
     initRoomDetail();
-
+    _blinkController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 1))
+          ..repeat(reverse: true);
     eventBusRoom.on<RoomDetailEvent>().listen((event) {
       setState(() {
         roomDetailResult = event.detailRoom;
@@ -43,10 +46,9 @@ class _MainPageState extends State<MainPage> {
     });
     _videoController.setLooping(true);
     _videoController.initialize().then((_) {
-      setState(() {
-        _videoController.play();
-      });
+      setState(() {});
     });
+    _videoController.play();
   }
 
   @override
@@ -68,6 +70,18 @@ class _MainPageState extends State<MainPage> {
                     : const Center(
                         child: CircularProgressIndicator(),
                       )),
+            SizedBox(
+              child: roomDetailResult?.roomDetail?.roomService == 1 &&
+                      roomDetailResult?.roomDetail?.checkinState == 1
+                  ? AnimatedOpacity(
+                      opacity: _blinkController.value,
+                      duration: const Duration(microseconds: 1),
+                      child: Container(
+                        decoration: const BoxDecoration(color: Colors.white),
+                      ),
+                    )
+                  : const SizedBox(),
+            ),
             SizedBox(
               width: double.infinity,
               height: double.infinity,
@@ -92,13 +106,20 @@ class _MainPageState extends State<MainPage> {
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
                                     const SizedBox(
-                                      height: 95,
+                                      height: 80,
                                     ),
                                     SizedBox(
                                       height: 40,
                                       child: DefaultTextStyle(
-                                        style:
-                                            GoogleFonts.roboto(fontSize: 43.0),
+                                        style: GoogleFonts.roboto(
+                                            shadows: <Shadow>[
+                                              const Shadow(
+                                                offset: Offset(2.0, 2.0),
+                                                blurRadius: 3.0,
+                                                color: Colors.black,
+                                              ),
+                                            ],
+                                            fontSize: 43.0),
                                         child: AnimatedTextKit(
                                           repeatForever: true,
                                           animatedTexts: [
@@ -109,10 +130,20 @@ class _MainPageState extends State<MainPage> {
                                         ),
                                       ),
                                     ),
+                                    const SizedBox(
+                                      height: 20,
+                                    ),
                                     SizedBox(
                                       height: 45,
                                       child: DefaultTextStyle(
                                         style: GoogleFonts.dancingScript(
+                                            shadows: <Shadow>[
+                                              const Shadow(
+                                                offset: Offset(2.0, 2.0),
+                                                blurRadius: 3.0,
+                                                color: Colors.black,
+                                              ),
+                                            ],
                                             fontSize: 43,
                                             fontWeight: FontWeight.bold),
                                         child: AnimatedTextKit(
@@ -139,13 +170,13 @@ class _MainPageState extends State<MainPage> {
                                               roomDetailResult?.roomDetail
                                                       ?.checkinState ==
                                                   1
-                                          ? IconButton(
-                                              onPressed: () async {
+                                          ? GestureDetector(
+                                              onDoubleTap: () {
                                                 ApiService().responseCallRoom();
                                               },
-                                              icon: const Icon(
+                                              child: const Icon(
                                                 Icons.account_circle_rounded,
-                                                color: Colors.red,
+                                                color: Colors.black,
                                                 size: 350,
                                               ),
                                             )
@@ -158,6 +189,13 @@ class _MainPageState extends State<MainPage> {
                                       height: 40,
                                       child: DefaultTextStyle(
                                         style: GoogleFonts.robotoSlab(
+                                            shadows: <Shadow>[
+                                              const Shadow(
+                                                offset: Offset(2.0, 2.0),
+                                                blurRadius: 3.0,
+                                                color: Colors.black,
+                                              ),
+                                            ],
                                             fontSize: 30,
                                             fontWeight: FontWeight.bold),
                                         child: AnimatedTextKit(
@@ -227,5 +265,6 @@ class _MainPageState extends State<MainPage> {
   void dispose() {
     super.dispose();
     _videoController.dispose();
+    _blinkController.dispose();
   }
 }
