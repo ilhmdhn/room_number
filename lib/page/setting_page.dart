@@ -93,6 +93,7 @@ class _SettingPageState extends State<SettingPage> {
                       roomCode: textRoomController.text);
 
                   await PreferencesData().initPreferences(preferencesModel);
+                  await ApiService().registerRoomNumber();
                   final submit = await ApiService().registerRoomNumber();
                   if (submit.isLoading == false) {
                     if (submit.state == true) {
