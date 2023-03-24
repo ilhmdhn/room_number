@@ -2,11 +2,13 @@ import 'package:room_number/api/api_request.dart';
 import 'package:room_number/data/event_bus/room_event.dart';
 import 'package:room_number/data/model/room_detail_model.dart';
 import 'package:room_number/page/setting_page.dart';
+import '../data/shared_pref/preferences_data.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -23,6 +25,7 @@ class _MainPageState extends State<MainPage>
   RoomDetailResult? roomDetailResult;
   int? checkinState = 0;
   late AnimationController _blinkController;
+  String roomCode = '';
 
   @override
   void initState() {
@@ -56,199 +59,230 @@ class _MainPageState extends State<MainPage>
     videoController();
     return SafeArea(
       child: Scaffold(
-          body: GestureDetector(
-        onLongPressUp: () {
-          Navigator.of(context).pushNamed(SettingPage.nameRoute);
-        },
-        child: Stack(
-          children: [
-            SizedBox(
+        body: GestureDetector(
+          onLongPressUp: () {
+            Navigator.of(context).pushNamed(SettingPage.nameRoute);
+          },
+          child: Stack(
+            children: [
+              SizedBox(
+                  width: double.infinity,
+                  height: double.infinity,
+                  child: _videoController.value.isInitialized
+                      ? VideoPlayer(_videoController)
+                      : const Center(
+                          child: CircularProgressIndicator(),
+                        )),
+              SizedBox(
+                child: roomDetailResult?.roomDetail?.roomService == 1 &&
+                        roomDetailResult?.roomDetail?.checkinState == 1
+                    ? AnimatedOpacity(
+                        opacity: _blinkController.value,
+                        duration: const Duration(microseconds: 1),
+                        child: Container(
+                          decoration: const BoxDecoration(color: Colors.white),
+                        ),
+                      )
+                    : const SizedBox(),
+              ),
+              SizedBox(
                 width: double.infinity,
                 height: double.infinity,
-                child: _videoController.value.isInitialized
-                    ? VideoPlayer(_videoController)
-                    : const Center(
+                child: roomDetailResult == null
+                    ? const Center(
                         child: CircularProgressIndicator(),
-                      )),
-            SizedBox(
-              child: roomDetailResult?.roomDetail?.roomService == 1 &&
-                      roomDetailResult?.roomDetail?.checkinState == 1
-                  ? AnimatedOpacity(
-                      opacity: _blinkController.value,
-                      duration: const Duration(microseconds: 1),
-                      child: Container(
-                        decoration: const BoxDecoration(color: Colors.white),
-                      ),
-                    )
-                  : const SizedBox(),
-            ),
-            SizedBox(
-              width: double.infinity,
-              height: double.infinity,
-              child: roomDetailResult == null
-                  ? const Center(
-                      child: CircularProgressIndicator(),
-                    )
-                  : Container(
-                      child: roomDetailResult?.state == false
-                          ? Center(
-                              child: Text(
-                                'ERROR ${roomDetailResult?.message} atau periksa pengaturan',
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 35),
+                      )
+                    : Container(
+                        child: roomDetailResult?.state == false
+                            ? Center(
+                                child: Text(
+                                  'ERROR ${roomDetailResult?.message} atau periksa pengaturan',
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 35),
+                                ),
+                              )
+                            : Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(
+                                        height: 75,
+                                      ),
+                                      SizedBox(
+                                        height: 45,
+                                        child: DefaultTextStyle(
+                                          style: GoogleFonts.robotoSlab(
+                                              shadows: <Shadow>[
+                                                const Shadow(
+                                                  offset: Offset(2.0, 2.0),
+                                                  blurRadius: 3.0,
+                                                  color: Colors.black,
+                                                ),
+                                              ],
+                                              fontSize: 43.0),
+                                          child: AnimatedTextKit(
+                                            repeatForever: true,
+                                            animatedTexts: [
+                                              FadeAnimatedText(roomDetailResult
+                                                      ?.roomDetail?.roomAlias ??
+                                                  ''),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 20,
+                                      ),
+                                      SizedBox(
+                                        height: 45,
+                                        child: DefaultTextStyle(
+                                          style: GoogleFonts.dancingScript(
+                                              shadows: <Shadow>[
+                                                const Shadow(
+                                                  offset: Offset(2.0, 2.0),
+                                                  blurRadius: 3.0,
+                                                  color: Colors.black,
+                                                ),
+                                              ],
+                                              fontSize: 43,
+                                              fontWeight: FontWeight.bold),
+                                          child: AnimatedTextKit(
+                                            repeatForever: true,
+                                            animatedTexts: [
+                                              TyperAnimatedText(
+                                                  roomDetailResult!
+                                                      .roomDetail!.guestName
+                                                      .toString(),
+                                                  speed: const Duration(
+                                                      milliseconds: 800)),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 20,
+                                      ),
+                                      SizedBox(
+                                        height: 45,
+                                        child: DefaultTextStyle(
+                                          style: GoogleFonts.robotoSlab(
+                                              shadows: <Shadow>[
+                                                const Shadow(
+                                                  offset: Offset(2.0, 2.0),
+                                                  blurRadius: 3.0,
+                                                  color: Colors.black,
+                                                ),
+                                              ],
+                                              fontSize: 30),
+                                          child: AnimatedTextKit(
+                                            repeatForever: true,
+                                            animatedTexts: [
+                                              FadeAnimatedText(roomDetailResult!
+                                                  .roomDetail!.checkinInfo
+                                                  .toString()),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Expanded(
+                                    child: SizedBox(
+                                        width: double.infinity,
+                                        child: roomDetailResult?.roomDetail
+                                                        ?.roomService ==
+                                                    1 &&
+                                                roomDetailResult?.roomDetail
+                                                        ?.checkinState ==
+                                                    1
+                                            ? GestureDetector(
+                                                onDoubleTap: () {
+                                                  ApiService()
+                                                      .responseCallRoom();
+                                                },
+                                                child: const Icon(
+                                                  Icons.account_circle_rounded,
+                                                  color: Colors.black,
+                                                  size: 350,
+                                                ),
+                                              )
+                                            : const SizedBox()),
+                                  ),
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      SizedBox(
+                                        height: 40,
+                                        child: DefaultTextStyle(
+                                          style: GoogleFonts.robotoSlab(
+                                              shadows: <Shadow>[
+                                                const Shadow(
+                                                  offset: Offset(2.0, 2.0),
+                                                  blurRadius: 3.0,
+                                                  color: Colors.black,
+                                                ),
+                                              ],
+                                              fontSize: 30,
+                                              fontWeight: FontWeight.bold),
+                                          child: AnimatedTextKit(
+                                            repeatForever: true,
+                                            animatedTexts: [
+                                              FadeAnimatedText(
+                                                  '${roomDetailResult?.roomDetail?.roomCapacity} PAX | REDUCED: ${((roomDetailResult?.roomDetail?.roomCapacity ?? 0) / 2).round()} PAX'),
+                                            ],
+                                            isRepeatingAnimation: true,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 125,
+                                      )
+                                    ],
+                                  ),
+                                ],
                               ),
-                            )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(
-                                      height: 75,
-                                    ),
-                                    SizedBox(
-                                      height: 45,
-                                      child: DefaultTextStyle(
-                                        style: GoogleFonts.robotoSlab(
-                                            shadows: <Shadow>[
-                                              const Shadow(
-                                                offset: Offset(2.0, 2.0),
-                                                blurRadius: 3.0,
-                                                color: Colors.black,
-                                              ),
-                                            ],
-                                            fontSize: 43.0),
-                                        child: AnimatedTextKit(
-                                          repeatForever: true,
-                                          animatedTexts: [
-                                            FadeAnimatedText(roomDetailResult
-                                                    ?.roomDetail?.roomAlias ??
-                                                ''),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 20,
-                                    ),
-                                    SizedBox(
-                                      height: 45,
-                                      child: DefaultTextStyle(
-                                        style: GoogleFonts.dancingScript(
-                                            shadows: <Shadow>[
-                                              const Shadow(
-                                                offset: Offset(2.0, 2.0),
-                                                blurRadius: 3.0,
-                                                color: Colors.black,
-                                              ),
-                                            ],
-                                            fontSize: 43,
-                                            fontWeight: FontWeight.bold),
-                                        child: AnimatedTextKit(
-                                          repeatForever: true,
-                                          animatedTexts: [
-                                            TyperAnimatedText(
-                                                roomDetailResult!
-                                                    .roomDetail!.guestName
-                                                    .toString(),
-                                                speed: const Duration(
-                                                    milliseconds: 800)),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 20,
-                                    ),
-                                    SizedBox(
-                                      height: 45,
-                                      child: DefaultTextStyle(
-                                        style: GoogleFonts.robotoSlab(
-                                            shadows: <Shadow>[
-                                              const Shadow(
-                                                offset: Offset(2.0, 2.0),
-                                                blurRadius: 3.0,
-                                                color: Colors.black,
-                                              ),
-                                            ],
-                                            fontSize: 30),
-                                        child: AnimatedTextKit(
-                                          repeatForever: true,
-                                          animatedTexts: [
-                                            FadeAnimatedText(roomDetailResult!
-                                                .roomDetail!.checkinInfo
-                                                .toString()),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Expanded(
-                                  child: SizedBox(
-                                      width: double.infinity,
-                                      child: roomDetailResult?.roomDetail
-                                                      ?.roomService ==
-                                                  1 &&
-                                              roomDetailResult?.roomDetail
-                                                      ?.checkinState ==
-                                                  1
-                                          ? GestureDetector(
-                                              onDoubleTap: () {
-                                                ApiService().responseCallRoom();
-                                              },
-                                              child: const Icon(
-                                                Icons.account_circle_rounded,
-                                                color: Colors.black,
-                                                size: 350,
-                                              ),
-                                            )
-                                          : const SizedBox()),
-                                ),
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    SizedBox(
-                                      height: 40,
-                                      child: DefaultTextStyle(
-                                        style: GoogleFonts.robotoSlab(
-                                            shadows: <Shadow>[
-                                              const Shadow(
-                                                offset: Offset(2.0, 2.0),
-                                                blurRadius: 3.0,
-                                                color: Colors.black,
-                                              ),
-                                            ],
-                                            fontSize: 30,
-                                            fontWeight: FontWeight.bold),
-                                        child: AnimatedTextKit(
-                                          repeatForever: true,
-                                          animatedTexts: [
-                                            FadeAnimatedText(
-                                                '${roomDetailResult?.roomDetail?.roomCapacity} PAX | REDUCED: ${((roomDetailResult?.roomDetail?.roomCapacity ?? 0) / 2).round()} PAX'),
-                                          ],
-                                          isRepeatingAnimation: true,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 125,
-                                    )
-                                  ],
-                                ),
-                              ],
-                            ),
-                    ),
-            )
-          ],
+                      ),
+              )
+            ],
+          ),
         ),
-      )),
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.only(right: 42, bottom: 43),
+          child: SizedBox(
+            height: 63,
+            width: 63,
+            child: FloatingActionButton(
+                backgroundColor: Colors.transparent,
+                onPressed: () {
+                  showDialog(
+                      context: context,
+                      builder: (BuildContext context) => AlertDialog(
+                            content: SizedBox(
+                              width: 200,
+                              height: 200,
+                              child: Center(
+                                child: QrImage(
+                                  data: roomCode,
+                                  version: QrVersions.auto,
+                                  size: 200.0,
+                                ),
+                              ),
+                            ),
+                          ));
+                }),
+          ),
+        ),
+      ),
     );
   }
 
   void initRoomDetail() async {
+    final preferencesData = await PreferencesData().getPreferences();
+    roomCode = preferencesData.roomCode ?? '';
     roomDetailResult = await ApiService().getRoomDetail();
     setState(() {});
   }

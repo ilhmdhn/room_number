@@ -38,6 +38,7 @@ dependencies:
   google_fonts: ^4.0.3
   http: ^0.13.5
   network_info_plus: ^3.0.2
+  qr_flutter: ^4.0.0
   shared_preferences: ^2.0.17
   video_player: ^2.5.1
 
