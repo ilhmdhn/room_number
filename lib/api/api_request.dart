@@ -49,4 +49,20 @@ class ApiService {
       return StateResult(isLoading: false, state: false, message: e.toString());
     }
   }
+
+  Future<StateResult> insertToken(String token) async {
+    try {
+      final preferences = await PreferencesData().getPreferences();
+
+      final url = '${preferences.url}:${preferences.port}';
+      final bodyRequest = {'room': preferences.roomCode, 'token': token};
+
+      Uri apiUrl = Uri.parse('http://$url/room/insert-room-number-token');
+      final apiResponse = await http.post(apiUrl, body: bodyRequest);
+      return StateResult.fromJson(json.decode(apiResponse.body));
+    } catch (error) {
+      return StateResult(
+          isLoading: false, state: false, message: error.toString());
+    }
+  }
 }

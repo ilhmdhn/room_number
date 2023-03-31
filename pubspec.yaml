@@ -32,6 +32,8 @@ dependencies:
   animated_text_kit: ^4.2.2
   cupertino_icons: ^1.0.2
   event_bus: ^2.0.0
+  firebase_core: ^2.9.0
+  firebase_messaging: ^14.4.0
   flutter:
     sdk: flutter
   flutter_ringtone_player: ^3.2.0
