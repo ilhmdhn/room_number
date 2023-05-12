@@ -35,12 +35,12 @@ class ApiService {
     }
   }
 
-  Future<StateResult> responseCallRoom() async {
+  Future<StateResult> responseCallRoom(String name) async {
     try {
       final preferences = await PreferencesData().getPreferences();
 
       final url = '${preferences.url}:${preferences.port}';
-      final bodyRequest = {'state': '0', 'chusr': 'room sign'};
+      final bodyRequest = {'state': '0', 'chusr': name};
       Uri apiUrl =
           Uri.parse('http://$url/call/callroom/${preferences.roomCode}');
       final apiResponse = await http.put(apiUrl, body: bodyRequest);

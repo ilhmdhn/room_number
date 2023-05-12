@@ -6,9 +6,10 @@ import '../data/shared_pref/preferences_data.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -23,9 +24,10 @@ class _MainPageState extends State<MainPage>
   late VideoPlayerController _videoController;
   bool? isSetting;
   RoomDetailResult? roomDetailResult;
-  int? checkinState = 0;
   late AnimationController _blinkController;
   String roomCode = '';
+  int checkinState = 0;
+  final inputNameController = TextEditingController();
 
   @override
   void initState() {
@@ -34,29 +36,34 @@ class _MainPageState extends State<MainPage>
     _blinkController =
         AnimationController(vsync: this, duration: const Duration(seconds: 1))
           ..repeat(reverse: true);
-    eventBusRoom.on<RoomDetailEvent>().listen((event) {
-      setState(() {
-        roomDetailResult = event.detailRoom;
-        if (event.detailRoom.roomDetail?.roomService == 1) {
-          FlutterRingtonePlayer.playNotification();
-        }
-      });
-    });
-
-    _videoController = VideoPlayerController.asset('assets/room_ready.mp4');
-    _videoController.addListener(() {
-      setState(() {});
-    });
+    if (roomDetailResult?.roomDetail?.checkinState == 1) {
+      _videoController = VideoPlayerController.asset('assets/room_checkin.mp4');
+    } else {
+      _videoController = VideoPlayerController.asset('assets/room_ready.mp4');
+    }
+    _videoController.addListener(() => setState(() {}));
     _videoController.setLooping(true);
     _videoController.initialize().then((_) {
       setState(() {});
-    });
+    }); 
     _videoController.play();
+
+    eventBusRoom.on<RoomDetailEvent>().listen((event) {
+      setState(() {
+        roomDetailResult = event.detailRoom;
+        if (checkinState != event.detailRoom.roomDetail?.checkinState) {
+          checkinState = event.detailRoom.roomDetail?.checkinState ?? 0;
+          videoSelector(checkinState);
+        }
+      });
+      setState(() {
+        roomDetailResult?.roomDetail?.roomService == 0;
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    videoController();
     return SafeArea(
       child: Scaffold(
         body: GestureDetector(
@@ -70,9 +77,7 @@ class _MainPageState extends State<MainPage>
                   height: double.infinity,
                   child: _videoController.value.isInitialized
                       ? VideoPlayer(_videoController)
-                      : const Center(
-                          child: CircularProgressIndicator(),
-                        )),
+                      : const Center(child: CircularProgressIndicator())),
               SizedBox(
                 child: roomDetailResult?.roomDetail?.roomService == 1 &&
                         roomDetailResult?.roomDetail?.checkinState == 1
@@ -200,9 +205,43 @@ class _MainPageState extends State<MainPage>
                                                         ?.checkinState ==
                                                     1
                                             ? GestureDetector(
-                                                onDoubleTap: () {
-                                                  ApiService()
-                                                      .responseCallRoom();
+                                                onDoubleTap: () async {
+                                                  showDialog<String>(
+                                                    context: context,
+                                                    builder: (BuildContext
+                                                            context) =>
+                                                        AlertDialog(
+                                                      title: const Text(
+                                                          'Response Room Call'),
+                                                      content: TextField(
+                                                        controller:
+                                                            inputNameController,
+                                                      ),
+                                                      actions: <Widget>[
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                  context,
+                                                                  'Cancel'),
+                                                          child: const Text(
+                                                              'Cancel'),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () async {
+                                                            await ApiService()
+                                                                .responseCallRoom(
+                                                                    inputNameController
+                                                                        .text);
+                                                            await initRoomDetail();
+                                                            Navigator.pop(
+                                                                context);
+                                                          },
+                                                          child:
+                                                              const Text('OK'),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
                                                 },
                                                 child: const Icon(
                                                   Icons.account_circle_rounded,
@@ -280,50 +319,48 @@ class _MainPageState extends State<MainPage>
     );
   }
 
-  void initRoomDetail() async {
+  Future<void> initRoomDetail() async {
     final preferencesData = await PreferencesData().getPreferences();
     roomCode = preferencesData.roomCode ?? '';
     roomDetailResult = await ApiService().getRoomDetail();
-    setState(() {});
+    if (roomDetailResult!.roomDetail!.checkinState! != checkinState) {
+      checkinState = roomDetailResult?.roomDetail?.checkinState ?? 0;
+      videoSelector(checkinState);
+    }
+    setState(() {
+      roomCode;
+      roomDetailResult;
+      checkinState = roomDetailResult?.roomDetail?.checkinState ?? 0;
+    });
+    initToken();
   }
 
-  void videoController() {
-    if (roomDetailResult != null && roomDetailResult?.isLoading != true) {
-      if (checkinState != roomDetailResult?.roomDetail?.checkinState) {
-        checkinState = roomDetailResult?.roomDetail?.checkinState;
-        if (roomDetailResult?.roomDetail?.checkinState == 1) {
-          _videoController.dispose();
-          _videoController =
-              VideoPlayerController.asset('assets/room_checkin.mp4');
-          _videoController.addListener(() {
-            setState(() {});
-          });
-          _videoController.setLooping(true);
-          _videoController.initialize().then((_) {
-            setState(() {});
-          });
-          _videoController.play();
-        } else {
-          _videoController.dispose();
-          _videoController =
-              VideoPlayerController.asset('assets/room_ready.mp4');
-          _videoController.addListener(() {
-            setState(() {});
-          });
-          _videoController.setLooping(true);
-          _videoController.initialize().then((_) {
-            setState(() {});
-          });
-          _videoController.play();
-        }
-      }
+  void videoSelector(int state) {
+    if (state == 1) {
+      _videoController = VideoPlayerController.asset('assets/room_checkin.mp4');
+    } else {
+      _videoController = VideoPlayerController.asset('assets/room_ready.mp4');
     }
+    _videoController.setLooping(true);
+    _videoController.initialize().then((_) => _videoController.play());
   }
 
   @override
   void dispose() {
-    super.dispose();
     _videoController.dispose();
     _blinkController.dispose();
+    inputNameController.dispose();
+    super.dispose();
   }
+}
+
+void initToken() async {
+  await Firebase.initializeApp();
+  String? fcmToken = await FirebaseMessaging.instance.getToken();
+
+  await ApiService().insertToken(fcmToken!);
+
+  FirebaseMessaging.instance.onTokenRefresh
+      .listen((fcmToken) async {})
+      .onError((err) async {});
 }
