@@ -7,3 +7,8 @@ class RoomDetailEvent {
   RoomDetailResult detailRoom;
   RoomDetailEvent(this.detailRoom);
 }
+
+class RoomServiceEvent {
+  bool service = false;
+  RoomServiceEvent(this.service);
+}

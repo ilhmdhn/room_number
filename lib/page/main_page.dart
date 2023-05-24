@@ -10,6 +10,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:wakelock/wakelock.dart';
+import 'package:just_audio/just_audio.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -23,19 +25,22 @@ class _MainPageState extends State<MainPage>
     with SingleTickerProviderStateMixin {
   late VideoPlayerController _videoController;
   bool? isSetting;
+  bool roomService = false;
   RoomDetailResult? roomDetailResult;
   late AnimationController _blinkController;
   String roomCode = '';
   int checkinState = 0;
   final inputNameController = TextEditingController();
+  final audioPlayer = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
     initRoomDetail();
+    Wakelock.enable();
     _blinkController =
         AnimationController(vsync: this, duration: const Duration(seconds: 1))
-          ..repeat(reverse: true);
+          ..repeat(reverse: false);
     if (roomDetailResult?.roomDetail?.checkinState == 1) {
       _videoController = VideoPlayerController.asset('assets/room_checkin.mp4');
     } else {
@@ -45,7 +50,7 @@ class _MainPageState extends State<MainPage>
     _videoController.setLooping(true);
     _videoController.initialize().then((_) {
       setState(() {});
-    }); 
+    });
     _videoController.play();
 
     eventBusRoom.on<RoomDetailEvent>().listen((event) {
@@ -56,10 +61,19 @@ class _MainPageState extends State<MainPage>
           videoSelector(checkinState);
         }
       });
+    });
+
+    eventBusRoom.on<RoomServiceEvent>().listen((event) {
       setState(() {
-        roomDetailResult?.roomDetail?.roomService == 0;
+        roomService = event.service;
+        if (roomService == true) {
+          audioPlayer.play();
+        } else {
+          audioPlayer.stop();
+        }
       });
     });
+    initAudio();
   }
 
   @override
@@ -79,8 +93,7 @@ class _MainPageState extends State<MainPage>
                       ? VideoPlayer(_videoController)
                       : const Center(child: CircularProgressIndicator())),
               SizedBox(
-                child: roomDetailResult?.roomDetail?.roomService == 1 &&
-                        roomDetailResult?.roomDetail?.checkinState == 1
+                child: roomService
                     ? AnimatedOpacity(
                         opacity: _blinkController.value,
                         duration: const Duration(microseconds: 1),
@@ -159,9 +172,10 @@ class _MainPageState extends State<MainPage>
                                             repeatForever: true,
                                             animatedTexts: [
                                               TyperAnimatedText(
-                                                  roomDetailResult!
-                                                      .roomDetail!.guestName
-                                                      .toString(),
+                                                  roomDetailResult?.roomDetail
+                                                          ?.guestName
+                                                          .toString() ??
+                                                      "",
                                                   speed: const Duration(
                                                       milliseconds: 800)),
                                             ],
@@ -186,9 +200,10 @@ class _MainPageState extends State<MainPage>
                                           child: AnimatedTextKit(
                                             repeatForever: true,
                                             animatedTexts: [
-                                              FadeAnimatedText(roomDetailResult!
-                                                  .roomDetail!.checkinInfo
-                                                  .toString()),
+                                              FadeAnimatedText(roomDetailResult
+                                                      ?.roomDetail?.checkinInfo
+                                                      .toString() ??
+                                                  ""),
                                             ],
                                           ),
                                         ),
@@ -198,12 +213,7 @@ class _MainPageState extends State<MainPage>
                                   Expanded(
                                     child: SizedBox(
                                         width: double.infinity,
-                                        child: roomDetailResult?.roomDetail
-                                                        ?.roomService ==
-                                                    1 &&
-                                                roomDetailResult?.roomDetail
-                                                        ?.checkinState ==
-                                                    1
+                                        child: roomService
                                             ? GestureDetector(
                                                 onDoubleTap: () async {
                                                   showDialog<String>(
@@ -233,8 +243,11 @@ class _MainPageState extends State<MainPage>
                                                                     inputNameController
                                                                         .text);
                                                             await initRoomDetail();
-                                                            Navigator.pop(
-                                                                context);
+                                                            if (context
+                                                                .mounted) {
+                                                              Navigator.pop(
+                                                                  context);
+                                                            }
                                                           },
                                                           child:
                                                               const Text('OK'),
@@ -323,7 +336,7 @@ class _MainPageState extends State<MainPage>
     final preferencesData = await PreferencesData().getPreferences();
     roomCode = preferencesData.roomCode ?? '';
     roomDetailResult = await ApiService().getRoomDetail();
-    if (roomDetailResult!.roomDetail!.checkinState! != checkinState) {
+    if (roomDetailResult?.roomDetail?.checkinState != checkinState) {
       checkinState = roomDetailResult?.roomDetail?.checkinState ?? 0;
       videoSelector(checkinState);
     }
@@ -350,7 +363,13 @@ class _MainPageState extends State<MainPage>
     _videoController.dispose();
     _blinkController.dispose();
     inputNameController.dispose();
+    // audioPlayer.dispose();
     super.dispose();
+  }
+
+  void initAudio() async {
+    await audioPlayer.setAsset('assets/dorbell.mp3');
+    audioPlayer.setLoopMode(LoopMode.one);
   }
 }
 
@@ -358,7 +377,7 @@ void initToken() async {
   await Firebase.initializeApp();
   String? fcmToken = await FirebaseMessaging.instance.getToken();
 
-  await ApiService().insertToken(fcmToken!);
+  await ApiService().insertToken(fcmToken ?? '');
 
   FirebaseMessaging.instance.onTokenRefresh
       .listen((fcmToken) async {})

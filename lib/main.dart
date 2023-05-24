@@ -1,38 +1,29 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:room_number/data/devices/wifi_data.dart';
 import 'package:room_number/data/event_bus/room_event.dart';
 import 'package:room_number/data/model/room_detail_model.dart';
 import 'package:room_number/page/setting_page.dart';
 import './page/main_page.dart';
 import 'package:flutter/services.dart';
-import 'api/api_request.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  /*
-  final wifiIP = await CheckConnection().checkIP();
-  final socket = await RawDatagramSocket.bind(wifiIP, 7082);
-  ApiService().registerRoomNumber();
 
-
-  socket.listen((RawSocketEvent event) async {
-    if (event == RawSocketEvent.read) {
-      Datagram? dg = socket.receive();
-      final roomDetail = await ApiService().getRoomDetail();
-      eventBusRoom.fire(RoomDetailEvent(roomDetail));
-    }
-  });
-*/
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     final inData = message.data["room_detail"];
-    print("SIGNAL RECEIVEDs " + inData.toString());
-    Map<String, dynamic> jsonMap = jsonDecode(inData);
-    RoomDetail dataIn = RoomDetail.fromJson(jsonMap);
-    eventBusRoom.fire(RoomDetailEvent(RoomDetailResult(roomDetail: dataIn)));
+    final serviceData = message.data["service"];
+    if (inData != null) {
+      Map<String, dynamic> jsonMap = jsonDecode(inData);
+      RoomDetail dataIn = RoomDetail.fromJson(jsonMap);
+      eventBusRoom.fire(RoomDetailEvent(RoomDetailResult(roomDetail: dataIn)));
+    } else if (serviceData != null) {
+      if (serviceData == "true") {
+        eventBusRoom.fire(RoomServiceEvent(true));
+      } else {
+        eventBusRoom.fire(RoomServiceEvent(false));
+      }
+    }
   });
 
   runApp(const RoomNumber());
