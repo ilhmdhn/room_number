@@ -38,9 +38,7 @@ class _MainPageState extends State<MainPage>
     super.initState();
     initRoomDetail();
     Wakelock.enable();
-    _blinkController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 1))
-          ..repeat(reverse: false);
+    _blinkController = AnimationController(vsync: this, duration: const Duration(seconds: 1))..repeat(reverse: false);
     if (roomDetailResult?.roomDetail?.checkinState == 1) {
       _videoController = VideoPlayerController.asset('assets/room_checkin.mp4');
     } else {
