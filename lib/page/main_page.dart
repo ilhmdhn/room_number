@@ -40,9 +40,9 @@ class _MainPageState extends State<MainPage>
     Wakelock.enable();
     _blinkController = AnimationController(vsync: this, duration: const Duration(seconds: 1))..repeat(reverse: false);
     if (roomDetailResult?.roomDetail?.checkinState == 1) {
-      _videoController = VideoPlayerController.asset('assets/room_checkin.mp4');
+      _videoController = VideoPlayerController.asset('assets/HP115.mp4');
     } else {
-      _videoController = VideoPlayerController.asset('assets/room_ready.mp4');
+      _videoController = VideoPlayerController.asset('assets/HP115.mp4');
     }
     _videoController.addListener(() => setState(() {}));
     _videoController.setLooping(true);
@@ -87,19 +87,15 @@ class _MainPageState extends State<MainPage>
               SizedBox(
                   width: double.infinity,
                   height: double.infinity,
-                  child: _videoController.value.isInitialized
-                      ? VideoPlayer(_videoController)
-                      : const Center(child: CircularProgressIndicator())),
+                  child: _videoController.value.isInitialized? VideoPlayer(_videoController) : const Center(child: CircularProgressIndicator())),
               SizedBox(
-                child: roomService
-                    ? AnimatedOpacity(
-                        opacity: _blinkController.value,
-                        duration: const Duration(microseconds: 1),
-                        child: Container(
-                          decoration: const BoxDecoration(color: Colors.white),
-                        ),
-                      )
-                    : const SizedBox(),
+                child: roomService? AnimatedOpacity(
+                  opacity: _blinkController.value,
+                  duration: const Duration(microseconds: 1),
+                  child: Container(
+                      decoration: const BoxDecoration(color: Colors.white),
+                    ),
+                ): const SizedBox(),
               ),
               SizedBox(
                 width: double.infinity,
@@ -167,6 +163,7 @@ class _MainPageState extends State<MainPage>
                                               fontSize: 43,
                                               fontWeight: FontWeight.bold),
                                           child: AnimatedTextKit(
+                                            pause: Duration(seconds: 5),
                                             repeatForever: true,
                                             animatedTexts: [
                                               TyperAnimatedText(
@@ -175,7 +172,7 @@ class _MainPageState extends State<MainPage>
                                                           .toString() ??
                                                       "",
                                                   speed: const Duration(
-                                                      milliseconds: 800)),
+                                                      milliseconds: 50)),
                                             ],
                                           ),
                                         ),
@@ -348,9 +345,9 @@ class _MainPageState extends State<MainPage>
 
   void videoSelector(int state) {
     if (state == 1) {
-      _videoController = VideoPlayerController.asset('assets/room_checkin.mp4');
+      _videoController = VideoPlayerController.asset('assets/HP115.mp4');
     } else {
-      _videoController = VideoPlayerController.asset('assets/room_ready.mp4');
+      _videoController = VideoPlayerController.asset('assets/HP115.mp4');
     }
     _videoController.setLooping(true);
     _videoController.initialize().then((_) => _videoController.play());

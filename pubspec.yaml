@@ -62,6 +62,7 @@ flutter:
   assets:
     - assets/room_ready.mp4
     - assets/room_checkin.mp4
+    - assets/HP115.mp4
     - assets/dorbell.mp3
   # To add assets to your application, add an assets section, like this:
   # assets:
